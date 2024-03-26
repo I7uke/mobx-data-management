@@ -8,10 +8,9 @@ interface EditorStatusBaseType<TStatus extends string> {
     readonly status: TStatus;
 }
 
-type EditorStatusEditItem = EditorStatusBaseType<'editItem'>;
 type EditorStatusHide = EditorStatusBaseType<'hide'>;
 
-interface EditorStatusServerRequest extends EditorStatusBaseType<'serverRequest'> {
+interface EditorStatusLoading extends EditorStatusBaseType<'loading'> {
     readonly loaderText: string;
 }
 
@@ -19,8 +18,7 @@ interface EditorStatusError extends EditorStatusBaseType<'error'> {
     readonly errorText: string;
 }
 
-type EditorStatus = EditorStatusEditItem | EditorStatusHide | EditorStatusServerRequest | EditorStatusError;
-
+type EditorStatus = EditorStatusHide | EditorStatusLoading | EditorStatusError;
 
 export type CallbackSaveModifiedItemParams<TItem extends Object> = {
     readonly item: TItem;
@@ -37,7 +35,7 @@ type SaveModifiedItemParams<TItem extends Object> = {
 type CallbackSaveModifiedItem<TItem extends Object> = (params: CallbackSaveModifiedItemParams<TItem>) => void;
 type CallbackCancelEditItem = () => void;
 
-export type InitDataBaseStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> = {
+export type InitAbstractStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> = {
     readonly itemToEdit: TItem;
     readonly itemStatus: ItemStatus
     readonly editorStatus?: EditorStatus;
@@ -45,12 +43,12 @@ export type InitDataBaseStoreEditItem<TItem extends Object, TModifiedItem extend
     readonly callbackCancelEditItem: CallbackCancelEditItem;
 }
 
-export default class BaseStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> {
+export default abstract class AbstractStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> {
     private readonly _callbackSaveModifiedItem: CallbackSaveModifiedItem<TModifiedItem>;
     private readonly _callbackCancelEditItem: CallbackCancelEditItem;
     private readonly _itemToEditBeforeChanges: TItem;
 
-    //region Статус элемента
+    //#region Статус элемента
     private _itemStatus_observable: ItemStatus;
 
     /**
@@ -75,67 +73,41 @@ export default class BaseStoreEditItem<TItem extends Object, TModifiedItem exten
     protected _getItemStatus(): ItemStatus {
         return this._itemStatus_observable;
     }
+    //#endregion
 
-    //endregion
-
-    //region Статус редактора
-    private _editorStatus_observable: EditorStatus;
+    //#region Статус редактора
+    private _editorStatus_observable: EditorStatus | undefined;
 
     /**
      * Установить статус редактора
      * @param status
      */
-    public setEditorStatus(status: EditorStatus) {
+    public setEditorStatus(status?: EditorStatus | undefined) {
         this._editorStatus_observable = status;
     }
 
     /**
      * Статус редактора
      */
-    get editorStatus() {
+    get editorStatus(): EditorStatus | undefined {
         return this._editorStatus_observable;
     }
-
-    //endregion
+    //#endregion
 
     /**
      * Получить исходный элемент для редактирования, без каких либо изменений
      * @protected
      */
-    protected _getItemToEditBeforeChanges(): TItem {
+    public getItemToEditBeforeChanges(): TItem {
         return cloneDeep(this._itemToEditBeforeChanges);
     }
 
-    /**
-     * Исходный элемент для редактирования, без каких либо изменений
-     */
-    get itemToEditBeforeChanges() {
-        return this._itemToEditBeforeChanges;
-    }
-
-    /**
-     * Измененный элемент
-     */
-    get modifiedItem(): TModifiedItem {
-        return this._getModifiedItemOverride();
-    }
-
-    //#region Методы для переопределения
+    //#region Абстрактные методы
     /**
      * Проверить измененный элемент
      * @protected
      */
-    protected _validationModifiedItemOverride() {
-        throw new Error('method _validationModifiedItemOverride must be override!');
-    }
-
-    /**
-     * Измененный элемент
-     */
-    protected _getModifiedItemOverride(): TModifiedItem {
-        throw new Error('method _getModifiedItemOverride must be override!');
-    }
-
+    protected abstract _validationModifiedItem(): void;
     //#endregion
 
     /**
@@ -160,20 +132,27 @@ export default class BaseStoreEditItem<TItem extends Object, TModifiedItem exten
     protected _saveModifiedItem(params: SaveModifiedItemParams<TModifiedItem>) {
         const modifiedItem: TModifiedItem = params.item;
         const modifiedItemHash: string = sha1(modifiedItem);
-        const itemToEditBeforeChangesHash: string = sha1(this._itemToEditBeforeChanges);
+        const itemToEditBeforeChangesHash: string = sha1(this.getItemToEditBeforeChanges());
 
-        if (itemToEditBeforeChangesHash === modifiedItemHash) {
+        // Флаг элемент изменен
+        let isItemChange: boolean = !(itemToEditBeforeChangesHash === modifiedItemHash);
+
+        if(params.other) {
+            // Если есть other считаем что элемент изменен
+            isItemChange = true;
+        }
+
+        if (!isItemChange) {
+            // Элемент не изменен, вызываем событие отмены и выходим
             this._cancelEditItem();
             return;
         }
 
-        const callbackSaveModifiedItemParams: CallbackSaveModifiedItemParams<TModifiedItem> = {
+        this._callbackSaveModifiedItem({
             item: params.item,
-            status: typeof params.status === 'string' ? params.status : this._itemStatus_observable,
+            status:typeof params.status === 'string' ? params.status : this._itemStatus_observable,
             other: params.other
-        };
-
-        this._callbackSaveModifiedItem(callbackSaveModifiedItemParams);
+        });
     }
 
     /**
@@ -186,7 +165,7 @@ export default class BaseStoreEditItem<TItem extends Object, TModifiedItem exten
         }
 
         // Вызываем метод проверки элемента
-        this._validationModifiedItemOverride();
+        this._validationModifiedItem();
     }
 
     /**
@@ -196,7 +175,7 @@ export default class BaseStoreEditItem<TItem extends Object, TModifiedItem exten
         this._cancelEditItem();
     }
 
-    constructor(initData: InitDataBaseStoreEditItem<TItem, TModifiedItem>) {
+    constructor(initData: InitAbstractStoreEditItem<TItem, TModifiedItem>) {
         this.eventSaveModifiedItem = this.eventSaveModifiedItem.bind(this);
         this.eventCancelEditItem = this.eventCancelEditItem.bind(this);
 
@@ -205,9 +184,7 @@ export default class BaseStoreEditItem<TItem extends Object, TModifiedItem exten
 
         this._itemToEditBeforeChanges = cloneDeep(initData.itemToEdit);
         this._itemStatus_observable = initData.itemStatus;
-        this._editorStatus_observable = initData.editorStatus ? initData.editorStatus : {
-            status: 'editItem'
-        };
+        this._editorStatus_observable = initData.editorStatus ? initData.editorStatus : undefined;
 
         makeObservable<this,
             '_itemStatus_observable'

@@ -1,8 +1,8 @@
 import {
-    BaseStoreEditItem,
+    AbstractStoreEditItem,
     CallbackSaveModifiedItemParams,
-    InitDataBaseStoreEditItem
-} from "../dist";
+    InitAbstractStoreEditItem
+} from "../src";
 
 interface TestDataType {
     readonly a: string;
@@ -24,9 +24,8 @@ function GET_TEST_DATA_STATIC(): TestDataType {
     }
 }
 
-class StoreEditItemTest1 extends BaseStoreEditItem<TestDataType> {
-
-    protected override _validationModifiedItemOverride(): void {
+class StoreEditItemTest1 extends AbstractStoreEditItem<TestDataType> {
+    protected override _validationModifiedItem(): void {
         this._saveModifiedItem({
             item:{
                 a: 'ChangeText',
@@ -41,34 +40,32 @@ class StoreEditItemTest1 extends BaseStoreEditItem<TestDataType> {
         });
     }
 
-    constructor(initData: InitDataBaseStoreEditItem<TestDataType>) {
+    constructor(initData: InitAbstractStoreEditItem<TestDataType>) {
         super(initData);
     }
 }
 
-class StoreEditItemTest2 extends BaseStoreEditItem<TestDataType> {
+class StoreEditItemTest2 extends AbstractStoreEditItem<TestDataType> {
 
-    protected override _validationModifiedItemOverride(): void {
+    protected override _validationModifiedItem(): void {
         this._saveModifiedItem(
             {
-                item: this._getItemToEditBeforeChanges(),
+                item: this.getItemToEditBeforeChanges(),
                 status: 'existingItem',
                 other: undefined
             }
         );
     }
 
-
-
     protected _saveModifiedItemOverride(): CallbackSaveModifiedItemParams<TestDataType> {
         return {
-            item: this._getItemToEditBeforeChanges(),
+            item: this.getItemToEditBeforeChanges(),
             status: 'existingItem',
             other: undefined
         }
     }
 
-    constructor(initData: InitDataBaseStoreEditItem<TestDataType>) {
+    constructor(initData: InitAbstractStoreEditItem<TestDataType>) {
         super(initData);
     }
 }
@@ -138,7 +135,7 @@ test('itemToEditBeforeChanges', () => {
         itemStatus: 'newItem',
     });
 
-    expect(storeEditItem.itemToEditBeforeChanges).toStrictEqual(GET_TEST_DATA_STATIC());
+    expect(storeEditItem.getItemToEditBeforeChanges()).toStrictEqual(GET_TEST_DATA_STATIC());
 });
 
 test('callbackSaveModifiedItem', () => {
@@ -164,9 +161,7 @@ test('editorStatus default', () => {
         itemStatus: 'newItem',
     });
 
-    expect(storeEditItem.editorStatus).toStrictEqual({
-        status: 'editItem'
-    });
+    expect(storeEditItem.editorStatus).toStrictEqual(undefined);
 });
 
 test('editorStatus setEditorStatus', () => {

@@ -3,7 +3,7 @@ import {
     DataSourceItem,
     ListenerChangeDataSource,
     StoreDataSource
-} from "../dist";
+} from "../src";
 
 interface TestDataType extends DataSourceItem {
     readonly fieldString: string;

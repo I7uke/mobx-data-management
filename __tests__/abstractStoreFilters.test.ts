@@ -1,4 +1,4 @@
-import { BaseStoreFilters } from "../dist";
+import { AbstractStoreFilters } from "../src";
 
 type PrimitiveTypes = null | undefined | number | string | boolean;
 
@@ -8,20 +8,28 @@ interface TestDataType {
     readonly c: boolean;
     readonly d: Date | null;
     readonly e: number[];
-    readonly f: string[]
+    readonly f: string[];
+    readonly j?: {
+        readonly a: string;
+        readonly b: number;
+    },
     readonly index: number;
 }
 
 function GET_TEST_DATA_STATIC(): TestDataType[] {
     return [
-        { //0
+        {//0
             a: 'Lorem ipsum dolor sit amet, te eum aeque quaestio pertinacia',
             b: 1,
             c: false,
             d: new Date('2023-01-01'),
             e: [1, 2, 4],
             f: ['1', '2', '4'],
-            index: 0,
+            j: {
+                a: 'Montes nascetur ridiculus mus mauris vitae ultricies leo integer malesuada. Iaculis nunc sed augue lacus viverra vitae congue eu',
+                b: 1,
+            },
+            index: 0
         },
         {//1
             a: 'Vel volumus singulis adipiscing et. Ne pri quis volutpat pertinacia, his percipit comprehensam ne',
@@ -42,12 +50,16 @@ function GET_TEST_DATA_STATIC(): TestDataType[] {
             index: 2
         },
         {//3
-            a: 'Luptatum detraxit eos ad, vel at impedit invenire sadipscing. Ea case consequat vim, te alii falli per',
+            a: 'Lorem ipsum dolor sit amet, te eum aeque quaestio pertinacia',
             b: 2,
             c: true,
             d: new Date('2023-01-04'),
             e: [1, 2, 3],
             f: ['1', '2', '3'],
+            j: {
+                a: 'Montes nascetur ridiculus mus mauris vitae ultricies leo integer malesuada. Iaculis nunc sed augue lacus viverra vitae congue eu',
+                b: 2
+            },
             index: 3
         },
         {//4
@@ -93,6 +105,10 @@ function GET_TEST_DATA_STATIC(): TestDataType[] {
             d: null,
             e: [2, 8, 9],
             f: ['2', '8', '9'],
+            j: {
+                a: 'Venenatis lectus magna fringilla urna porttitor rhoncus dolor purus. Maecenas volutpat blandit aliquam etiam erat',
+                b: 3
+            },
             index: 8
         },
         {//9
@@ -107,7 +123,7 @@ function GET_TEST_DATA_STATIC(): TestDataType[] {
     ];
 }
 
-class StoreFiltersTest extends BaseStoreFilters<TestDataType> {
+class StoreFiltersTest extends AbstractStoreFilters<TestDataType> {
     public applySortString_AZ(inputItems: TestDataType[]) {
         return this._sortString_AZ(inputItems, 'a');
     }
@@ -148,6 +164,23 @@ class StoreFiltersTest extends BaseStoreFilters<TestDataType> {
         });
     }
 
+
+    public searchFunc(inputItems: TestDataType[], searchQuery: string) {
+        return this._searchStringFunc({
+            itemsList: inputItems,
+            searchQuery: searchQuery,
+            getFields: (item)=>{
+                return [
+                    item.a,
+                    String(item.b),
+                    item.e.join(' '),
+                    item.j?.a,
+                    typeof item.j?.b === 'number' ? String(item.j.b) : ''
+                ]
+            }
+        });
+    }
+
     public filterArrayFieldByArrayValues(inputItems: TestDataType[], searchValuesList: PrimitiveTypes[]) {
         return this._filterArrayFieldByArrayValues({
             fieldsNames: ['f', 'e'],
@@ -173,16 +206,14 @@ class StoreFiltersTest extends BaseStoreFilters<TestDataType> {
     }
 
     private _applyTestSearchString(inputItems: TestDataType[]) {
-
         return this._searchString({
             itemsList: inputItems,
             searchQuery: 'Lorem ipsum dolor sit amet',
             fieldsNames: ['a']
         });
-
     }
 
-    protected override _applyFiltersOverride(inputItems: TestDataType[]): TestDataType[] {
+    protected override _applyFilters(inputItems: TestDataType[]): TestDataType[] {
         return this._applyFiltersInOrder(inputItems, [
             this.applySortString_AZ,
             this._applyTestSearchString
@@ -342,6 +373,7 @@ test('Search string', () => {
 
     expect(result).toStrictEqual([
         testData[0],
+        testData[3],
         testData[4],
         testData[9],
     ]);
@@ -545,6 +577,7 @@ test('applyFilters', () => {
         testData[4],
         testData[9],
         testData[0],
+        testData[3]
     ]);
 });
 
@@ -570,4 +603,47 @@ test('removeCallbackUpdateViewData', () => {
     storeFilters.removeCallbackUpdateViewData()
     storeFilters.eventUpdateViewData();
     expect(result).toStrictEqual(false);
+});
+
+test('searchFunc - 1', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.searchFunc(GET_TEST_DATA_STATIC(), '');
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual(testData);
+});
+
+test('searchFunc - 2', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.searchFunc([], 'test');
+    expect(result).toStrictEqual([]);
+});
+
+test('searchFunc - 3', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.searchFunc(GET_TEST_DATA_STATIC(), 'vitae ultricies leo');
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[3],
+    ]);
+});
+
+test('searchFunc - 4', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.searchFunc(GET_TEST_DATA_STATIC(), 'Iaculis nunc sed augue');
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[3],
+    ]);
+});
+
+test('searchFunc - 5', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.searchFunc(GET_TEST_DATA_STATIC(), 'ridiculus mus mauris');
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[3]
+    ]);
 });

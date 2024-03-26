@@ -1,4 +1,4 @@
-import { getUniqueUuid } from "../dist";
+import { getUniqueUuid } from "../src";
 
 test('typeof string', () => {
     const uuid = getUniqueUuid();

@@ -1,4 +1,4 @@
-import { DataSourceItem, StoreDisplayedData } from "../dist";
+import { DataSourceItem, StoreDisplayedData } from "../src";
 
 interface TestDataType extends DataSourceItem {
     readonly a: string;

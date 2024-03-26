@@ -1,3 +1,7 @@
+import { StoreFilters } from ".";
+
+type PrimitiveTypes = null | undefined | number | string | boolean;
+
 type SearchStringParams<TItem extends Object> = {
     /**
      * Список элементов для поиска
@@ -13,7 +17,20 @@ type SearchStringParams<TItem extends Object> = {
     readonly searchQuery: string;
 }
 
-type PrimitiveTypes = null | undefined | number | string | boolean;
+type SearchStringDeepParams<TItem extends Object> = {
+    /**
+     * Список элементов для поиска
+     */
+    readonly itemsList: TItem[];
+    /**
+     * Получить по которым будет осуществлен поиск
+     */
+    readonly getFields: (item: TItem) => (string | null | undefined)[];
+    /**
+     * Поисковый запрос
+     */
+    readonly searchQuery: string;
+}
 
 type FilterArrayFieldByArrayValuesParams<TItem extends Object> = {
     /**
@@ -60,7 +77,7 @@ type FilterByValueParams<TItem extends Object> = {
     readonly fieldsNames: (keyof TItem)[];
 }
 
-export default class BaseStoreFilters<TItem extends Object> {
+export default abstract class AbstractStoreFilters<TItem extends Object>  implements StoreFilters<TItem> {
     private _callbackUpdateViewData?: () => void;
 
     /**
@@ -83,7 +100,7 @@ export default class BaseStoreFilters<TItem extends Object> {
      * @param callback
      */
     public setCallbackUpdateViewData(callback: () => void) {
-        if(typeof callback === 'function'){
+        if(typeof callback === 'function') {
             this._callbackUpdateViewData = callback;
         }
     }
@@ -116,13 +133,10 @@ export default class BaseStoreFilters<TItem extends Object> {
      * @param inputItems
      * @protected
      */
-    protected _applyFiltersOverride(inputItems: TItem[]): TItem[] {
-        console.warn('method _applyFiltersOverride must be override');
-        return inputItems;
-    }
+    protected abstract _applyFilters(inputItems: TItem[]): TItem[];
 
     public applyFilters(inputItems: TItem[]): TItem[] {
-        return this._applyFiltersOverride(inputItems);
+        return this._applyFilters(inputItems);
     }
 
     //region Сортировки
@@ -379,6 +393,30 @@ export default class BaseStoreFilters<TItem extends Object> {
      * @protected
      */
     protected _searchString(param: SearchStringParams<TItem>): TItem[] {
+        if(!Array.isArray(param.itemsList)) {
+            return [];
+        }
+
+        if(!param.itemsList.length) {
+            return [];
+        }
+
+        if(typeof param.searchQuery !== 'string') {
+            return param.itemsList;
+        }
+
+        if(!param.searchQuery) {
+            return param.itemsList;
+        }
+
+        if(!Array.isArray(param.fieldsNames) ) {
+            return param.itemsList;
+        }
+
+        if(!param.fieldsNames.length) {
+            return param.itemsList;
+        }
+
         const result: TItem[] = [];
         const itemsList = param.itemsList;
         const searchQuery: string = param.searchQuery.toLowerCase();
@@ -387,6 +425,61 @@ export default class BaseStoreFilters<TItem extends Object> {
         for (const item of itemsList) {
             for (const fieldName of fieldsNamesForSearch) {
                 const valueForSearch: any = item[fieldName];
+                const stringForSearch: string = (typeof valueForSearch === 'string') ? valueForSearch.toLowerCase() : String(valueForSearch).toLowerCase();
+                if (stringForSearch.indexOf(searchQuery) > -1) {
+                    result.push(item);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 
+     * @param param 
+     * @returns 
+     */
+    protected _searchStringFunc(param: SearchStringDeepParams<TItem>): TItem[] {
+        if(!Array.isArray(param.itemsList)) {
+            return [];
+        }
+
+        if(!param.itemsList.length) {
+            return [];
+        }
+
+        if(typeof param.searchQuery !== 'string') {
+            return param.itemsList;
+        }
+
+        if(!param.searchQuery) {
+            return param.itemsList;
+        }
+
+        if(typeof param.getFields !== 'function') {
+            return param.itemsList;
+        }
+
+        const result: TItem[] = [];
+        const itemsList = param.itemsList;
+        const searchQuery: string = param.searchQuery.toLowerCase();
+        
+        for (const item of itemsList) {
+            const fieldsList = param.getFields(item);
+
+            if (!Array.isArray(fieldsList)) {
+                continue;
+            }
+
+            for (const field of fieldsList) {
+                const valueForSearch: PrimitiveTypes = field;
+
+                if (!valueForSearch) {
+                    continue;
+                }
+
                 const stringForSearch: string = (typeof valueForSearch === 'string') ? valueForSearch.toLowerCase() : String(valueForSearch).toLowerCase();
                 if (stringForSearch.indexOf(searchQuery) > -1) {
                     result.push(item);

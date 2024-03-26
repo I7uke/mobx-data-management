@@ -1,4 +1,4 @@
-import {BaseStorePage} from "../dist";
+import {BaseStorePage} from "../src";
 
 class TestStorePage1 extends BaseStorePage<string> {
 

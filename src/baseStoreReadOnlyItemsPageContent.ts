@@ -2,11 +2,11 @@ import React from "react";
 import { action, computed, makeObservable, observable } from "mobx";
 import {
     BaseStoreContent,
-    BaseStoreFilters,
     DataSourceItem, InitStoreDisplayedData,
     ListenerChangeDataSource,
     StoreDataSource,
     StoreDisplayedData,
+    StoreFilters,
     getUniqueUuid
 } from "./index";
 
@@ -15,7 +15,7 @@ export type InitDataBaseStoreReadOnlyItemsPageContent = {
     readonly itemDataAttribute?: string;
 }
 
-export default class BaseStoreReadOnlyItemsPageContent<TItem extends DataSourceItem, TStoreFilters extends BaseStoreFilters<TItem> | undefined = undefined> implements BaseStoreContent {
+export default class BaseStoreReadOnlyItemsPageContent<TItem extends DataSourceItem, TStoreFilters extends StoreFilters<TItem> | undefined = undefined> implements BaseStoreContent {
 
     protected readonly _uniquePageKey: string;
     private readonly _itemDataAttribute: string;
