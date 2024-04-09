@@ -164,12 +164,24 @@ class StoreFiltersTest extends AbstractStoreFilters<TestDataType> {
         });
     }
 
+    public filterByValuesFunc(inputItems: TestDataType[], searchValuesList: PrimitiveTypes[]){
+        return this._filterByValuesFunc({
+            itemsList: inputItems,
+            searchValuesList: searchValuesList,
+            getValues: (item)=> [
+                item.a,
+                item.b,
+                item.j?.a,
+                item.j?.b
+            ]
+        });
+    }
 
     public searchFunc(inputItems: TestDataType[], searchQuery: string) {
         return this._searchStringFunc({
             itemsList: inputItems,
             searchQuery: searchQuery,
-            getFields: (item)=>{
+            getValues: (item)=>{
                 return [
                     item.a,
                     String(item.b),
@@ -178,14 +190,6 @@ class StoreFiltersTest extends AbstractStoreFilters<TestDataType> {
                     typeof item.j?.b === 'number' ? String(item.j.b) : ''
                 ]
             }
-        });
-    }
-
-    public filterArrayFieldByArrayValues(inputItems: TestDataType[], searchValuesList: PrimitiveTypes[]) {
-        return this._filterArrayFieldByArrayValues({
-            fieldsNames: ['f', 'e'],
-            itemsList: inputItems,
-            searchValuesList: searchValuesList,
         });
     }
 
@@ -382,69 +386,6 @@ test('Search string', () => {
 test('Search string empty', () => {
     const storeFilters: StoreFiltersTest = new StoreFiltersTest();
     const result = storeFilters.searchString(GET_TEST_DATA_STATIC(), '');
-    const testData = GET_TEST_DATA_STATIC();
-    expect(result).toStrictEqual(testData);
-});
-
-test('filterArrayFieldByArrayValues numbers', () => {
-    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
-    const result = storeFilters.filterArrayFieldByArrayValues(GET_TEST_DATA_STATIC(), [1, 2, 3]);
-    const testData = GET_TEST_DATA_STATIC();
-
-    expect(result).toStrictEqual([
-        testData[0],
-        testData[3],
-        testData[5],
-        testData[6],
-        testData[8],
-    ]);
-});
-
-test('filterArrayFieldByArrayValues string', () => {
-    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
-    const result = storeFilters.filterArrayFieldByArrayValues(GET_TEST_DATA_STATIC(), ['1', '2', '3']);
-    const testData = GET_TEST_DATA_STATIC();
-
-    expect(result).toStrictEqual([
-        testData[0],
-        testData[3],
-        testData[5],
-        testData[6],
-        testData[8],
-    ]);
-});
-
-test('filterArrayFieldByArrayValues string | numbers', () => {
-    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
-    const result = storeFilters.filterArrayFieldByArrayValues(GET_TEST_DATA_STATIC(), ['1', '2', '3', 1, 2, 3]);
-    const testData = GET_TEST_DATA_STATIC();
-
-    expect(result).toStrictEqual([
-        testData[0],
-        testData[3],
-        testData[5],
-        testData[6],
-        testData[8],
-    ]);
-});
-
-test('filterArrayFieldByArrayValues string | numbers', () => {
-    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
-    const result = storeFilters.filterArrayFieldByArrayValues(GET_TEST_DATA_STATIC(), ['1', '2', '3', 1, 2, 3, 5]);
-    const testData = GET_TEST_DATA_STATIC();
-    expect(result).toStrictEqual([
-        testData[0],
-        testData[1],
-        testData[3],
-        testData[5],
-        testData[6],
-        testData[8],
-    ]);
-});
-
-test('filterArrayFieldByArrayValues empty', () => {
-    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
-    const result = storeFilters.filterArrayFieldByArrayValues(GET_TEST_DATA_STATIC(), []);
     const testData = GET_TEST_DATA_STATIC();
     expect(result).toStrictEqual(testData);
 });
@@ -646,4 +587,99 @@ test('searchFunc - 5', () => {
         testData[0],
         testData[3]
     ]);
+});
+
+test('filterByValuesFunc - 1', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), ['Lorem ipsum dolor sit amet, te eum aeque quaestio pertinacia']);
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[3]
+    ]);
+});
+
+test('filterByValuesFunc - 2', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), ['Lorem ipsum dolor sit amet, te eum aeque quaestio pertinacia', 1]);
+    
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[1],
+        testData[3],
+    ]);
+});
+
+test('filterByValuesFunc - 3', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), [2, 'Lorem ipsum dolor sit amet, te eum aeque quaestio pertinacia']);
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[2],
+        testData[3],
+    ]);
+});
+
+
+test('filterByValuesFunc - 4', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), ['Montes nascetur ridiculus mus mauris vitae ultricies leo integer malesuada. Iaculis nunc sed augue lacus viverra vitae congue eu']);
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[3],
+    ]);
+});
+
+test('filterByValuesFunc - 5', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), [1, 2]);
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[0],
+        testData[1],
+        testData[2],
+        testData[3]
+    ]);
+});
+
+test('filterByValuesFunc - 6', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), [5]);
+
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual([
+        testData[8],
+        testData[9]
+    ]);
+});
+
+test('filterByValuesFunc - 7', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    //@ts-ignore
+    const result = storeFilters.filterByValuesFunc({}, [0]);
+    expect(result).toStrictEqual([]);
+});
+
+test('filterByValuesFunc - 8', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc([], [0]);
+    expect(result).toStrictEqual([]);
+});
+
+test('filterByValuesFunc - 9', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+     //@ts-ignore
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), {});
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual(testData);
+});
+
+test('filterByValuesFunc - 10', () => {
+    const storeFilters: StoreFiltersTest = new StoreFiltersTest();
+    const result = storeFilters.filterByValuesFunc(GET_TEST_DATA_STATIC(), []);
+    const testData = GET_TEST_DATA_STATIC();
+    expect(result).toStrictEqual(testData);
 });

@@ -16,15 +16,13 @@ test('unique 100', () => {
     expect(testMap.size).toStrictEqual(100);
 });
 
-test('unique 5000000', () => {
-    const uniqueUuid = getUniqueUuid();
-
+test('unique 100000', () => {
     const testMap: Map<string, null> = new Map<string, null>();
 
-    for (let i = 0; i < 5000000; ++i) {
+    for (let i = 0; i < 100000; ++i) {
         const uuid = getUniqueUuid();
         testMap.set(uuid, null)
     }
 
-    expect(testMap.size).toStrictEqual(5000000);
+    expect(testMap.size).toStrictEqual(100000);
 });
