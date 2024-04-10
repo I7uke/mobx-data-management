@@ -1,11 +1,11 @@
 import { action, computed, makeObservable, observable } from "mobx";
-import { BaseStoreContent } from "./models/baseStoreContent";
+import { BaseStorePageContent } from "./models/baseStorePageContent";
 
 export type InitDataBaseStoreDefaultContent = {
     readonly uniquePageKey: string;
 }
 
-export default class BaseStoreDefaultContent implements BaseStoreContent {
+export default abstract class AbstractStoreDefaultPageContent implements BaseStorePageContent {
     protected readonly _uniquePageKey: string;
 
     public getUniquePageKey(): string {
@@ -64,38 +64,34 @@ export default class BaseStoreDefaultContent implements BaseStoreContent {
     }
     //#endregion
 
-    protected _serverRequestGetInitDataOverride(): void {
-        throw new Error('method _serverRequestGetInitDataOverride must be override');
-    }
+    protected abstract _serverRequestGetInitData(): void;
 
     /**
     * Запрос на сервер, получить начальное состояние хранилища
     */
     public serverRequestGetInitData(): void {
-        this._serverRequestGetInitDataOverride();
+        this._serverRequestGetInitData();
     }
 
     //#region beforeRemovingStore
-    protected _beforeRemovingStoreOverride() {
-    }
+    protected abstract _beforeRemovingStore(): void;
 
     /**
      * Вызывать перед удалением store
      */
     public beforeRemovingStore(): void {
-        this._beforeRemovingStoreOverride();
+        this._beforeRemovingStore();
     }
     //#endregion
 
     //#region init
-    protected _initOverride(): void {
-    }
+    protected abstract _init(): void;
 
     /**
      * Вызывать для инициализации
      */
     public init(): void {
-        this._initOverride();
+        this._init();
     }
     //#endregion
 

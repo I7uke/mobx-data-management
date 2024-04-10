@@ -1,35 +1,21 @@
 import cloneDeep from "lodash.clonedeep";
 import {action, computed, makeObservable, observable} from "mobx";
 import {sha1} from "object-hash";
+import { BaseStoreEditItem } from "./models/baseStoreEditItem";
 
-type ItemStatus = 'newItem' | 'existingItem';
-
-interface EditorStatusBaseType<TStatus extends string> {
-    readonly status: TStatus;
-}
-
-type EditorStatusHide = EditorStatusBaseType<'hide'>;
-
-interface EditorStatusLoading extends EditorStatusBaseType<'loading'> {
-    readonly loaderText: string;
-}
-
-interface EditorStatusError extends EditorStatusBaseType<'error'> {
-    readonly errorText: string;
-}
-
-type EditorStatus = EditorStatusHide | EditorStatusLoading | EditorStatusError;
+type ItemStatus = BaseStoreEditItem['itemStatus'];
+type EditorStatus = NonNullable<BaseStoreEditItem['editorStatus']>;
 
 export type CallbackSaveModifiedItemParams<TItem extends Object> = {
     readonly item: TItem;
     readonly status: ItemStatus;
-    readonly other?: unknown;
+    readonly other?: any;
 }
 
 type SaveModifiedItemParams<TItem extends Object> = {
     readonly item: TItem;
     readonly status?: ItemStatus;
-    readonly other?: unknown;
+    readonly other?: any;
 }
 
 type CallbackSaveModifiedItem<TItem extends Object> = (params: CallbackSaveModifiedItemParams<TItem>) => void;
@@ -43,7 +29,7 @@ export type InitAbstractStoreEditItem<TItem extends Object, TModifiedItem extend
     readonly callbackCancelEditItem: CallbackCancelEditItem;
 }
 
-export default abstract class AbstractStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> {
+export default abstract class AbstractStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> implements BaseStoreEditItem {
     private readonly _callbackSaveModifiedItem: CallbackSaveModifiedItem<TModifiedItem>;
     private readonly _callbackCancelEditItem: CallbackCancelEditItem;
     private readonly _itemToEditBeforeChanges: TItem;
@@ -148,6 +134,10 @@ export default abstract class AbstractStoreEditItem<TItem extends Object, TModif
             return;
         }
 
+        if (typeof this._callbackSaveModifiedItem !== 'function') {
+            throw new Error('_callbackSaveModifiedItem is not a function');
+        }
+
         this._callbackSaveModifiedItem({
             item: params.item,
             status:typeof params.status === 'string' ? params.status : this._itemStatus_observable,
@@ -160,10 +150,6 @@ export default abstract class AbstractStoreEditItem<TItem extends Object, TModif
      * Если элемент не изменился, будет вызвано событие отмены редактирования
      */
     public eventSaveModifiedItem() {
-        if (typeof this._callbackSaveModifiedItem !== 'function') {
-            throw new Error('_callbackSaveModifiedItem is not a function');
-        }
-
         // Вызываем метод проверки элемента
         this._validationModifiedItem();
     }

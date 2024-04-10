@@ -1,4 +1,4 @@
-export interface BaseStoreContent {
+export interface BaseStorePageContent {
     readonly getUniquePageKey: ()=> string;
     readonly error: string | undefined
     readonly redirectLink: string | undefined;

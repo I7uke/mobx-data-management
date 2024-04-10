@@ -1,4 +1,4 @@
-import { StoreFilters } from ".";
+import { BaseStoreFilters } from ".";
 
 type PrimitiveTypes = null | undefined | number | string | boolean;
 
@@ -77,7 +77,7 @@ type FilterByValueParams<TItem extends Object> = {
     readonly fieldsNames: (keyof TItem)[];
 }
 
-export default abstract class AbstractStoreFilters<TItem extends Object>  implements StoreFilters<TItem> {
+export default abstract class AbstractStoreFilters<TItem extends Object>  implements BaseStoreFilters<TItem> {
     private _callbackUpdateViewData?: () => void;
 
     /**
