@@ -3,22 +3,16 @@ import {action, computed, makeObservable, observable} from "mobx";
 import {sha1} from "object-hash";
 import { BaseStoreEditItem } from "./models/baseStoreEditItem";
 
-type ItemStatus = BaseStoreEditItem['itemStatus'];
-type EditorStatus = NonNullable<BaseStoreEditItem['editorStatus']>;
-
-export type CallbackSaveModifiedItemParams<TItem extends Object> = {
-    readonly item: TItem;
-    readonly status: ItemStatus;
-    readonly other?: any;
-}
-
-type SaveModifiedItemParams<TItem extends Object> = {
+export type ResultOfItemEditing<TItem extends Object> = {
     readonly item: TItem;
     readonly status?: ItemStatus;
     readonly other?: any;
 }
 
-type CallbackSaveModifiedItem<TItem extends Object> = (params: CallbackSaveModifiedItemParams<TItem>) => void;
+type ItemStatus = BaseStoreEditItem<any, any>['itemStatus'];
+type EditorStatus = NonNullable<BaseStoreEditItem<any, any>['editorStatus']>;
+
+type CallbackSaveModifiedItem<TItem extends Object> = (params: ResultOfItemEditing<TItem>) => void;
 type CallbackCancelEditItem = () => void;
 
 export type InitAbstractStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> = {
@@ -29,7 +23,7 @@ export type InitAbstractStoreEditItem<TItem extends Object, TModifiedItem extend
     readonly callbackCancelEditItem: CallbackCancelEditItem;
 }
 
-export default abstract class AbstractStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> implements BaseStoreEditItem {
+export default abstract class AbstractStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> implements BaseStoreEditItem<TItem, TModifiedItem> {
     private readonly _callbackSaveModifiedItem: CallbackSaveModifiedItem<TModifiedItem>;
     private readonly _callbackCancelEditItem: CallbackCancelEditItem;
     private readonly _itemToEditBeforeChanges: TItem;
@@ -91,6 +85,7 @@ export default abstract class AbstractStoreEditItem<TItem extends Object, TModif
     //#region Абстрактные методы
     /**
      * Проверить измененный элемент
+     * Метод вызывается в eventSaveModifiedItem
      * @protected
      */
     protected abstract _validationModifiedItem(): void;
@@ -112,10 +107,10 @@ export default abstract class AbstractStoreEditItem<TItem extends Object, TModif
      * @param params
      *  item - Элемент который нужно сохранить
      *  status - Статус элемента, если не передать, будет автоматически подставлен текущий статус
-     * other - Прочее. Может являться чем угодно
+     *  other - Прочее. Может являться чем угодно
      * @protected
      */
-    protected _saveModifiedItem(params: SaveModifiedItemParams<TModifiedItem>) {
+    protected _saveModifiedItem(params: ResultOfItemEditing<TModifiedItem>) {
         const modifiedItem: TModifiedItem = params.item;
         const modifiedItemHash: string = sha1(modifiedItem);
         const itemToEditBeforeChangesHash: string = sha1(this.getItemToEditBeforeChanges());

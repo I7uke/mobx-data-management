@@ -17,9 +17,12 @@ interface EditorStatusError extends EditorStatusBaseType<'error'> {
 type EditorStatus = EditorStatusHide | EditorStatusLoading | EditorStatusError;
 
 
-export interface BaseStoreEditItem {
+export interface BaseStoreEditItem<TItem extends Object, TModifiedItem extends Object = TItem> {
     readonly setItemStatus: (status: ItemStatus) => void;
     readonly itemStatus: ItemStatus;
-    readonly setEditorStatus:(status?: EditorStatus | undefined)=> void;
+    readonly setEditorStatus: (status?: EditorStatus | undefined) => void;
     readonly editorStatus: EditorStatus | undefined;
+    readonly getItemToEditBeforeChanges: () => TItem;
+    readonly eventSaveModifiedItem: () => void;
+    readonly eventCancelEditItem: () => void;
 }

@@ -1,11 +1,11 @@
 export {type InitStoreDisplayedData} from "./storeDisplayedData";
 export {type DataSourceItem, type DataSourceItemChangeType, type ListenerChangeDataSource} from "./storeDataSource";
 export {type InitDataBaseStoreEditItemsPageContent} from "./baseStoreEditItemsPageContent";
-export {type CallbackSaveModifiedItemParams, type InitAbstractStoreEditItem} from "./abstractStoreEditItem";
 export {type InitDataBaseStoreDefaultContent} from "./abstractStoreDefaultPageContent";
 export {type BaseStorePageContent} from "./models/baseStorePageContent";
 export {type BaseStoreFilters} from "./models/baseStoreFilters";
 export {type BaseStoreEditItem} from "./models/baseStoreEditItem";
+export {type ResultOfItemEditing} from "./abstractStoreEditItem";
 export {default as BaseStoreReadOnlyItemsPageContent} from "./baseStoreReadOnlyItemsPageContent";
 export {default as getUniqueUuid} from "./getUniqueUuid";
 export {default as StoreSitePageTitle} from "./storeSitePageTitle";
