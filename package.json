@@ -13,19 +13,12 @@
     "test-storeSitePageTitle": "jest storeSitePageTitle.test.ts --coverage",
     "test-baseStorePage": "jest baseStorePage.test.ts --coverage",
     "uniqueUuid": "jest uniqueUuid.test.ts --coverage",
+    "test-storePopupWindows": "jest storePopupWindows.test.ts --coverage",
     "build-prod": "rollup --config"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/CoraxEidolon/ts-mobx-data-management"
-  },
-  "main": "./dist",
+  "main": "/dist",
   "author": "Ivan",
   "type": "module",
-  "bugs": {
-    "url": "https://github.com/CoraxEidolon/ts-mobx-data-management/issues"
-  },
-  "homepage": "https://github.com/CoraxEidolon/ts-mobx-data-management#readme",
   "keywords": [
     "ts",
     "ts-mobx-data-management"
