@@ -1,4 +1,4 @@
-import { DataSourceItem } from ".";
+import { DataSourceItem } from "./storeDataSource";
 
 export default abstract class AbstractValidationItems<TInvalidItem, TValidItem extends DataSourceItem> {
     public validationItemsList(itemsList?: TInvalidItem[] | undefined | null): TValidItem[] {

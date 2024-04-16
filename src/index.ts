@@ -1,10 +1,9 @@
-export { default as BaseStoreDefaultContent, type InitDataBaseStoreDefaultContent } from "./abstractStoreDefaultPageContent";
-export { default as AbstractStoreEditItem, type ResultOfItemEditing } from "./abstractStoreEditItem";
+export { default as AbstractStoreDefaultPageContent, type InitBaseStoreDefaultContent } from "./abstractStoreDefaultPageContent";
 export { default as AbstractStoreFilters } from "./abstractStoreFilters";
+export { default as AbstractValidationItems } from "./abstractValidationItems";
 export { default as BaseStoreEditItemsPageContent, type InitDataBaseStoreEditItemsPageContent } from "./baseStoreEditItemsPageContent";
-export { default as BaseStorePage } from "./baseStorePage";
+export { default as BaseStorePage, type InitBaseStorePage } from "./baseStorePage";
 export { default as BaseStoreReadOnlyItemsPageContent } from "./baseStoreReadOnlyItemsPageContent";
-export { default as getUniqueUuid } from "./getUniqueUuid";
 export { type BaseStoreEditItem } from "./models/baseStoreEditItem";
 export { type BaseStoreFilters } from "./models/baseStoreFilters";
 export { type BaseStorePageContent } from "./models/baseStorePageContent";
@@ -15,3 +14,4 @@ export { default as StoreDataSource, type DataSourceItem, type DataSourceItemCha
 export { default as StoreDisplayedData, type InitStoreDisplayedData } from "./storeDisplayedData";
 export { default as StorePopupWindows } from "./storePopupWindows";
 export { default as StoreSitePageTitle } from "./storeSitePageTitle";
+export { default as AbstractStoreEditItem, type InitAbstractStoreEditItem, type ResultOfItemEditing } from "./abstractStoreEditItem";

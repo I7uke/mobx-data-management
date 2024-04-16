@@ -1,28 +1,19 @@
-import React from "react";
 import { action, computed, makeObservable, observable } from "mobx";
-import {
-    BaseStoreContent,
-    DataSourceItem, InitStoreDisplayedData,
-    ListenerChangeDataSource,
-    StoreDataSource,
-    StoreDisplayedData,
-    StoreFilters,
-    getUniqueUuid
-} from "./index";
+import React from "react";
+import { BaseStoreFilters } from "./models/baseStoreFilters";
+import { BaseStorePageContent } from "./models/baseStorePageContent";
+import StoreDataSource, { DataSourceItem, ListenerChangeDataSource } from "./storeDataSource";
+import StoreDisplayedData, { InitStoreDisplayedData } from "./storeDisplayedData";
 
 export type InitDataBaseStoreReadOnlyItemsPageContent = {
     readonly uniquePageKey: string;
     readonly itemDataAttribute?: string;
 }
 
-export default class BaseStoreReadOnlyItemsPageContent<TItem extends DataSourceItem, TStoreFilters extends StoreFilters<TItem> | undefined = undefined> implements BaseStoreContent {
+export default class BaseStoreReadOnlyItemsPageContent<TItem extends DataSourceItem, TStoreFilters extends BaseStoreFilters<TItem> | undefined = undefined> implements BaseStorePageContent {
 
     protected readonly _uniquePageKey: string;
     private readonly _itemDataAttribute: string;
-
-    protected _getUniqueUuid(): string {
-        return getUniqueUuid();
-    }
 
     public getUniquePageKey() {
         return this._uniquePageKey;
@@ -64,28 +55,6 @@ export default class BaseStoreReadOnlyItemsPageContent<TItem extends DataSourceI
 
     //#endregion
 
-    //#region Проверить элемент
-    protected _validationItemsList(itemsList?: any | undefined | null): TItem[] {
-        const result: TItem[] = [];
-
-        if (!Array.isArray(itemsList)) {
-            return result;
-        }
-
-        if (!itemsList.length) {
-            return result;
-        }
-
-        for (const item of itemsList) {
-            const validItem: TItem | undefined = this._validationItemOverride(item);
-            if (validItem) {
-                result.push(validItem);
-            }
-        }
-
-        return result;
-    }
-
     //#endregion
 
     //#region Действия над элементом (не события)
@@ -125,7 +94,6 @@ export default class BaseStoreReadOnlyItemsPageContent<TItem extends DataSourceI
     public eventResetDetailInfoAboutItem() {
         this._setDetailInfoAboutItem(undefined);
     }
-
 
     /**
      * Обновить отображаемые данные
@@ -202,10 +170,6 @@ export default class BaseStoreReadOnlyItemsPageContent<TItem extends DataSourceI
     //#endregion
 
     //#region Методы для переопределения
-    protected _validationItemOverride(item: unknown, existingUuid?: string): TItem | undefined {
-        throw new Error('method _validationItemOverride must be override');
-    }
-
     protected _serverRequestGetInitDataOverride(): void {
         throw new Error('method _serverRequestGetInitDataOverride must be override');
     }

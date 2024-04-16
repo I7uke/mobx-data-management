@@ -1,7 +1,7 @@
 import { action, computed, makeObservable, observable } from "mobx";
 import { BaseStorePageContent } from "./models/baseStorePageContent";
 
-export type InitDataBaseStoreDefaultContent = {
+export type InitBaseStoreDefaultContent = {
     readonly uniquePageKey: string;
 }
 
@@ -49,11 +49,18 @@ export default abstract class AbstractStoreDefaultPageContent implements BaseSto
      */
     protected _setRedirectLink(link: string) {
         if (typeof link !== 'string') {
-            this._redirectLink_observable = '';
+            return;
+        }
+
+        if (!link) {
             return;
         }
 
         this._redirectLink_observable = link;
+    }
+
+    protected _removeRedirectLink() {
+        this._redirectLink_observable = undefined;
     }
 
     /**
@@ -95,7 +102,7 @@ export default abstract class AbstractStoreDefaultPageContent implements BaseSto
     }
     //#endregion
 
-    constructor(initData: InitDataBaseStoreDefaultContent) {
+    constructor(initData: InitBaseStoreDefaultContent) {
         this.serverRequestGetInitData = this.serverRequestGetInitData.bind(this);
         this.beforeRemovingStore = this.beforeRemovingStore.bind(this);
         this.init = this.init.bind(this);
@@ -108,12 +115,14 @@ export default abstract class AbstractStoreDefaultPageContent implements BaseSto
             | '_setRedirectLink'
             | '_error_observable'
             | '_setError'
-            | '_removeError'>(this, {
+            | '_removeError'
+            | '_removeRedirectLink'>(this, {
             _redirectLink_observable: observable.ref,
             _error_observable: observable.ref,
             _setRedirectLink: action,
             _setError: action,
             _removeError: action,
+            _removeRedirectLink: action,
             redirectLink: computed,
             error: computed,
         });

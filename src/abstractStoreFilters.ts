@@ -1,4 +1,4 @@
-import { BaseStoreFilters } from ".";
+import { BaseStoreFilters } from "./models/baseStoreFilters";
 
 type PrimitiveTypes = null | undefined | number | string | boolean;
 

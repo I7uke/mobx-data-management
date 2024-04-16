@@ -1,6 +1,6 @@
 import cloneDeep from "lodash.clonedeep";
-import {action, computed, makeObservable, observable} from "mobx";
-import {sha1} from "object-hash";
+import { action, computed, makeObservable, observable } from "mobx";
+import { sha1 } from "object-hash";
 import { BaseStoreEditItem } from "./models/baseStoreEditItem";
 
 export type ResultOfItemEditing<TItem extends Object> = {

@@ -16,17 +16,17 @@ type PageInfo = {
     readonly linkBack: string;
 }
 
-function getInitData(): PageInfo {
-    return {
-        documentTitle: '',
-        pageTitle: '',
-        linkBack: '',
-    };
-}
-
 export default class StoreSitePageTitle {
 
     private _pageInfo_observable: PageInfo;
+
+    private _getInitData(): PageInfo {
+        return {
+            documentTitle: '',
+            pageTitle: '',
+            linkBack: '',
+        };
+    }
 
     public setOptions(params: Partial<PageInfo>) {
         const currentPageInfo: PageInfo = cloneDeep(this._pageInfo_observable);
@@ -62,11 +62,11 @@ export default class StoreSitePageTitle {
      * Очищает все данные, возвращает объект в состояние на момент его создания
      */
     public destroy() {
-        this._pageInfo_observable = getInitData();
+        this._pageInfo_observable = this._getInitData();
     }
 
     constructor() {
-        this._pageInfo_observable = getInitData();
+        this._pageInfo_observable = this._getInitData();
 
         makeObservable<this,
             '_pageInfo_observable'>(this, {

@@ -1,6 +1,6 @@
-import {action, computed, makeObservable, observable} from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 
-type InitData = {
+export type InitBaseStorePage = {
     /**
      * Забыть данные после выхода.
      * Если истина, после ухода со страницы все данные будут забыты
@@ -94,7 +94,7 @@ export default class BaseStorePage<StoreContentPage> {
         this._pageShown();
     }
 
-    constructor(initData?: InitData) {
+    constructor(initData?: InitBaseStorePage) {
         this.eventPageExit = this.eventPageExit.bind(this);
         this.eventPageShown = this.eventPageShown.bind(this);
         this._storeContentPage_observable = undefined;

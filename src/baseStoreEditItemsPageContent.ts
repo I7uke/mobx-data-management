@@ -1,15 +1,10 @@
 import { action, computed, makeObservable, observable } from "mobx";
 import React from "react";
-import {
-    BaseStoreContent,
-    CallbackSaveModifiedItemParams,
-    DataSourceItem, InitStoreDisplayedData,
-    ListenerChangeDataSource,
-    StoreDataSource,
-    StoreDisplayedData,
-    StoreFilters,
-    getUniqueUuid
-} from "./index";
+import { ResultOfItemEditing } from "./abstractStoreEditItem";
+import { BaseStoreFilters } from "./models/baseStoreFilters";
+import { BaseStorePageContent } from "./models/baseStorePageContent";
+import StoreDataSource, { DataSourceItem, ListenerChangeDataSource } from "./storeDataSource";
+import StoreDisplayedData, { InitStoreDisplayedData } from "./storeDisplayedData";
 
 export type InitDataBaseStoreEditItemsPageContent<TItem extends DataSourceItem> = {
     readonly getNewItem: () => TItem;
@@ -17,14 +12,10 @@ export type InitDataBaseStoreEditItemsPageContent<TItem extends DataSourceItem> 
     readonly itemDataAttribute?: string;
 }
 
-export default class BaseStoreEditItemsPageContent<TItem extends DataSourceItem, TStoreEditItem, TStoreFilters extends StoreFilters<TItem> | undefined = undefined> implements BaseStoreContent {
+export default class BaseStoreEditItemsPageContent<TItem extends DataSourceItem, TStoreEditItem, TStoreFilters extends BaseStoreFilters<TItem> | undefined = undefined> implements BaseStorePageContent {
     protected readonly _getNewItem: () => TItem;
     protected readonly _uniquePageKey: string;
     private readonly _itemDataAttribute: string;
-
-    protected _getUniqueUuid(): string {
-        return getUniqueUuid();
-    }
 
     public getUniquePageKey() {
         return this._uniquePageKey;
@@ -83,30 +74,6 @@ export default class BaseStoreEditItemsPageContent<TItem extends DataSourceItem,
 
     protected _getDetailInfoAboutItem(): TItem | undefined {
         return this._detailInfoAboutItem_observable;
-    }
-
-    //#endregion
-
-    //#region Проверить элемент
-    protected _validationItemsList(itemsList?: any | undefined | null): TItem[] {
-        const result: TItem[] = [];
-
-        if (!Array.isArray(itemsList)) {
-            return result;
-        }
-
-        if (!itemsList.length) {
-            return result;
-        }
-
-        for (const item of itemsList) {
-            const validItem: TItem | undefined = this._validationItemOverride(item);
-            if (validItem) {
-                result.push(validItem);
-            }
-        }
-
-        return result;
     }
 
     //#endregion
@@ -231,7 +198,7 @@ export default class BaseStoreEditItemsPageContent<TItem extends DataSourceItem,
         });
     }
 
-    public eventSaveModifiedItemDefault(param: CallbackSaveModifiedItemParams<TItem>): void {
+    public eventSaveModifiedItemDefault(param: ResultOfItemEditing<TItem>): void {
         if (param.status === 'newItem') {
             this._serverRequestSaveNewItemOverride(param.item, param.other);
             return;
@@ -315,10 +282,6 @@ export default class BaseStoreEditItemsPageContent<TItem extends DataSourceItem,
      */
     protected _getDeleteItemConfirmTextOverride(item: TItem): string {
         return 'Удалить элемент ?';
-    }
-
-    protected _validationItemOverride(item: unknown, existingUuid?: string): TItem | undefined {
-        throw new Error('method _validationItemOverride must be override');
     }
 
     protected _eventEditItemOverride(item: TItem, isNew: boolean): void {

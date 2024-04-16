@@ -1,8 +1,6 @@
 import { action, computed, makeObservable, observable } from "mobx";
 import { v4 as uuidv4 } from "uuid";
-import { ParamsPopupWindowAlert } from "./models/paramsPopupWindowAlert";
-import { ParamsPopupWindowConfirm } from "./models/paramsPopupWindowConfirm";
-import { ParamsPopupWindowLoading } from "./models/paramsPopupWindowLoading";
+import { ParamsPopupWindowAlert, ParamsPopupWindowConfirm, ParamsPopupWindowLoading } from ".";
 
 type MakePropertyOptional<T, K extends keyof T> = Omit<T, K> & { [P in K]?: T[P] };
 
@@ -95,7 +93,7 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
         }
     }
 
-    private _closeById(popupId: string) {
+    private _closeById(popupId: string): boolean {
         const popupThatNeedsClosedId: string = this._validationString(popupId);
 
         // Проверяем текущее открытое окно
@@ -118,7 +116,7 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
                     this._openPopupWindow_observable = undefined;
                 }
 
-                return;
+                return true;
             }
         }
 
@@ -129,9 +127,12 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
 
                 if (index > -1) {
                     this._queuePopupWindows.splice(index, 1);
+                    return true;
                 }
             }
         }
+
+        return false;
     }
     //#endregion
 
@@ -153,15 +154,15 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
     }
 
     private _validationInputParams(params?: SetAlertParams<TParamsAlert> | SetConfirmParams<TParamsConfirm> | SetLoadingParams<TParamsLoading> | undefined | null): boolean {
-        if(!params) {
+        if (!params) {
             return false;;
         }
 
-        if(Array.isArray(params)) {
+        if (Array.isArray(params)) {
             return false;
         }
 
-        if(typeof params !== 'object') {
+        if (typeof params !== 'object') {
             return false;
         }
 
@@ -177,7 +178,7 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
      * @param params 
      */
     public setAlert(params: SetAlertParams<TParamsAlert>): string {
-        if(!this._validationInputParams(params)) {
+        if (!this._validationInputParams(params)) {
             return '';
         }
 
@@ -207,7 +208,7 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
      * @param params 
      */
     public setConfirm(params: SetConfirmParams<TParamsConfirm>): string {
-        if(!this._validationInputParams(params)) {
+        if (!this._validationInputParams(params)) {
             return '';
         }
 
@@ -242,7 +243,7 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
      * @param params 
      */
     public setLoading(params: SetLoadingParams<TParamsLoading>): string {
-        if(!this._validationInputParams(params)) {
+        if (!this._validationInputParams(params)) {
             return '';
         }
 
@@ -285,8 +286,8 @@ export default class StorePopupWindows<TParamsAlert extends ParamsPopupWindowAle
      * Закрыть конкретное окно, используя его popupId
      * @param popupId 
      */
-    public closeById(popupId: string) {
-        this._closeById(popupId);
+    public closeById(popupId: string): boolean {
+        return this._closeById(popupId);
     }
     //#endregion
 

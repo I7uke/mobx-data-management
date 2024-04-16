@@ -1,5 +1,5 @@
 import {action, computed, makeObservable, observable} from "mobx";
-import {DataSourceItem} from "./index";
+import { DataSourceItem } from "./storeDataSource";
 
 type CurrentPageType = number | 'firstPage' | 'lastPage';
 

@@ -1,4 +1,4 @@
-import {getUniqueUuid} from "./index";
+import {v4 as uuidv4} from "uuid";
 
 export interface DataSourceItem {
     readonly uuid: string;
@@ -60,21 +60,21 @@ export default class StoreDataSource<TItem extends DataSourceItem> {
         if (typeof item.uuid !== 'string') {
             return {
                 ...item,
-                uuid: getUniqueUuid()
+                uuid: uuidv4()
             }
         }
 
         if (!item.uuid) {
             return {
                 ...item,
-                uuid: getUniqueUuid()
+                uuid: uuidv4()
             }
         }
 
         if (this._internalItems.has(item.uuid)) {
             return {
                 ...item,
-                uuid: getUniqueUuid()
+                uuid: uuidv4()
             }
         }
 
@@ -263,7 +263,7 @@ export default class StoreDataSource<TItem extends DataSourceItem> {
             }
         }
 
-        const listenerId: string = getUniqueUuid();
+        const listenerId: string = uuidv4();
         this._callbacksListenersChangeDataSource[listenerId] = listener;
     }
 
