@@ -1,6 +1,6 @@
 {
   "name": "ts-mobx-data-management",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "ts-mobx-data-management",
   "sideEffects": false,
   "scripts": {
@@ -16,7 +16,7 @@
     "test-abstractStoreDefaultPageContent.test": "jest abstractStoreDefaultPageContent.test --coverage",
     "build-prod": "rollup --config"
   },
-  "main": "/dist",
+  "main": "./dist",
   "author": "Ivan",
   "type": "module",
   "keywords": [
