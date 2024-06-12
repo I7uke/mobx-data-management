@@ -16,6 +16,11 @@ interface TestDataType {
     readonly index: number;
 }
 
+interface TestDataSortType {
+    readonly text: string;
+    readonly index: number;
+}
+
 function GET_TEST_DATA_STATIC(): TestDataType[] {
     return [
         {//0
@@ -123,13 +128,85 @@ function GET_TEST_DATA_STATIC(): TestDataType[] {
     ];
 }
 
+function GET_TEST_DATA_SORT_STATIC():TestDataSortType[] {
+    return [
+        {
+            index: 0,
+            text: 'Z'
+        },
+        {
+            index: 1,
+            text: 'Y'
+        },
+        {
+            index: 2,
+            text:'X',
+        },
+        {
+            index: 3,
+            text: 'C'
+        },
+        {
+            index: 4,
+            text: 'B'
+        },
+        {
+            index: 5,
+            text: 'A'
+        },
+        {
+            index: 6,
+            text: 'z'
+        },
+        {
+            index: 7,
+            text: 'y'
+        },
+        {
+            index: 8,
+            text:'x',
+        },
+        {
+            index: 9,
+            text: 'c'
+        },
+        {
+            index: 10,
+            text: 'b'
+        },
+        {
+            index: 11,
+            text: 'a'
+        },
+
+        {
+            index: 12,
+            text: '0'
+        },
+        {
+            index: 13,
+            text: '9'
+        },
+        {
+            index: 14,
+            text: '5'
+        },
+    ];
+}
+
 class StoreFiltersTest extends AbstractStoreFilters<TestDataType> {
     public applySortString_AZ(inputItems: TestDataType[]) {
-        return this._sortString_AZ(inputItems, 'a');
+        return this._sortString_AZ({
+            fieldName: 'a',
+            itemsList: inputItems
+        });
     }
 
     public applySortString_ZA(inputItems: TestDataType[]) {
-        return this._sortString_ZA(inputItems, 'a');
+        return this._sortString_ZA({
+            fieldName: 'a',
+            itemsList: inputItems
+        });
     }
 
     public applySortNumber_09(inputItems: TestDataType[]) {
@@ -231,8 +308,32 @@ class StoreFiltersTest extends AbstractStoreFilters<TestDataType> {
     }
 }
 
-test('Sort string A-Z', () => {
+class StoreFiltersTestSort extends AbstractStoreFilters<TestDataSortType> {
+    public applySortString_AZ(inputItems: TestDataSortType[]) {
+        return this._sortString_AZ({
+            fieldName: 'text',
+            itemsList: inputItems
+        });
+    }
 
+    public applySortString_ZA(inputItems: TestDataSortType[]) {
+        return this._sortString_ZA({
+            fieldName: 'text',
+            itemsList: inputItems
+        });
+    }
+
+    protected override _applyFilters(inputItems: TestDataSortType[]): TestDataSortType[] {
+        return [];
+    }
+
+    constructor() {
+        super();
+        this.applySortString_AZ = this.applySortString_AZ.bind(this);
+    }
+}
+
+test('Sort string A-Z (1)', () => {
     const storeFilters: StoreFiltersTest = new StoreFiltersTest();
     const result = storeFilters.applySortString_AZ(GET_TEST_DATA_STATIC());
 
@@ -249,7 +350,30 @@ test('Sort string A-Z', () => {
     }));
 });
 
-test('Sort string Z-A', () => {
+test('Sort string A-Z (2)', () => {
+    const storeFilters: StoreFiltersTestSort = new StoreFiltersTestSort();
+    const result = storeFilters.applySortString_AZ(GET_TEST_DATA_SORT_STATIC());
+    const TEST_DATA = GET_TEST_DATA_SORT_STATIC();
+    expect(result).toStrictEqual([
+        TEST_DATA[12],
+        TEST_DATA[14],
+        TEST_DATA[13],
+        TEST_DATA[5],
+        TEST_DATA[11],
+        TEST_DATA[4],
+        TEST_DATA[10],
+        TEST_DATA[3],
+        TEST_DATA[9],
+        TEST_DATA[2],
+        TEST_DATA[8],
+        TEST_DATA[1],
+        TEST_DATA[7],
+        TEST_DATA[0],
+        TEST_DATA[6]
+    ]);
+});
+
+test('Sort string Z-A (1)', () => {
     const storeFilters: StoreFiltersTest = new StoreFiltersTest();
     const result = storeFilters.applySortString_ZA(GET_TEST_DATA_STATIC());
 
@@ -264,6 +388,30 @@ test('Sort string Z-A', () => {
 
         return 0
     }));
+});
+
+test('Sort string Z-A (2)', () => {
+    const storeFilters: StoreFiltersTestSort = new StoreFiltersTestSort();
+    const result = storeFilters.applySortString_ZA(GET_TEST_DATA_SORT_STATIC());
+    const TEST_DATA = GET_TEST_DATA_SORT_STATIC();
+
+    expect(result).toStrictEqual([
+        TEST_DATA[0],
+        TEST_DATA[6],
+        TEST_DATA[1],
+        TEST_DATA[7],
+        TEST_DATA[2],
+        TEST_DATA[8],
+        TEST_DATA[3],
+        TEST_DATA[9],
+        TEST_DATA[4],
+        TEST_DATA[10],
+        TEST_DATA[5],
+        TEST_DATA[11],
+        TEST_DATA[13],
+        TEST_DATA[14],
+        TEST_DATA[12]
+    ]);
 });
 
 test('Sort number 9-0', () => {

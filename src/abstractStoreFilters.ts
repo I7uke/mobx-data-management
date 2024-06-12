@@ -77,6 +77,21 @@ type FilterByValueParams<TItem extends Object> = {
     readonly fieldsNames: (keyof TItem)[];
 }
 
+type SortStringParams<TItem extends Object>  = {
+    /**
+     * Список элементов для поиска
+     */
+    readonly itemsList: TItem[];
+    /**
+     *  Название поля
+     */
+    readonly fieldName: keyof TItem;
+    /**
+     * Международный региональный стандарт
+     */
+    readonly locales?: Intl.LocalesArgument;
+}
+
 export default abstract class AbstractStoreFilters<TItem extends Object>  implements BaseStoreFilters<TItem> {
     private _callbackUpdateViewData?: () => void;
 
@@ -158,7 +173,9 @@ export default abstract class AbstractStoreFilters<TItem extends Object>  implem
      * @param fieldNameStrType
      * @protected
      */
-    protected _sortString_AZ(itemsList: TItem[], fieldNameStrType: keyof TItem): TItem[] {
+    protected _sortString_AZ(params: SortStringParams<TItem>): TItem[] {
+        const {itemsList, fieldName, locales} = params;
+
         if(!Array.isArray(itemsList)) {
             return [];
         }
@@ -167,22 +184,16 @@ export default abstract class AbstractStoreFilters<TItem extends Object>  implem
             return [];
         }
 
+        const collator = new Intl.Collator(locales, { sensitivity: 'base' });
+
         itemsList.sort((a: TItem, b: TItem) => {
-            const itemTmpA = a[fieldNameStrType];
-            const itemTmpB = b[fieldNameStrType];
+            const itemTmpA = a[fieldName];
+            const itemTmpB = b[fieldName];
 
             const itemA: string = (typeof itemTmpA === 'string') ? itemTmpA : String(itemTmpA);
             const itemB: string = (typeof itemTmpB === 'string') ? itemTmpB : String(itemTmpB);
 
-            if (itemA > itemB) {
-                return 1;
-            }
-
-            if (itemA < itemB) {
-                return -1;
-            }
-
-            return 0;
+            return collator.compare(itemA, itemB);
         });
 
         return itemsList;
@@ -194,7 +205,9 @@ export default abstract class AbstractStoreFilters<TItem extends Object>  implem
      * @param fieldNameStrType
      * @protected
      */
-    protected _sortString_ZA(itemsList: TItem[], fieldNameStrType: keyof TItem): TItem[] {
+    protected _sortString_ZA(params: SortStringParams<TItem>): TItem[] {
+        const {itemsList, fieldName, locales} = params;
+
         if(!Array.isArray(itemsList)) {
             return [];
         }
@@ -203,22 +216,16 @@ export default abstract class AbstractStoreFilters<TItem extends Object>  implem
             return [];
         }
         
+        const collator = new Intl.Collator(locales, { sensitivity: 'base' });
+
         itemsList.sort((a: TItem, b: TItem) => {
-            const itemTmpA = a[fieldNameStrType];
-            const itemTmpB = b[fieldNameStrType];
+            const itemTmpA = a[fieldName];
+            const itemTmpB = b[fieldName];
 
             const itemA: string = (typeof itemTmpA === 'string') ? itemTmpA : String(itemTmpA);
             const itemB: string = (typeof itemTmpB === 'string') ? itemTmpB : String(itemTmpB);
 
-            if (itemA > itemB) {
-                return -1;
-            }
-
-            if (itemA < itemB) {
-                return 1;
-            }
-
-            return 0;
+            return collator.compare(itemB, itemA);
         });
 
         return itemsList;
