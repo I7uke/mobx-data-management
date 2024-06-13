@@ -27,9 +27,24 @@ type Pagination<TItem> = {
     readonly itemsOnCurrentPage: TItem[];
 }
 
+type InternalPagination<TItem> = {
+    /**
+     * Текущая страница, отсчет идет с 1
+     */
+    readonly currentPage: number;
+    /**
+     * Возможные количества элементов на странице
+     */
+    readonly numberItemsPerPage: NumberItemsPerPage;
+    /**
+     * Список всех элементов
+     */
+    readonly allItemsList: TItem[];
+}
+
 type Params<TItem> = {
     /**
-     * Текущая страница, ВАЖНО! отсчет идет с 1
+     * Текущая страница, отсчет идет с 1
      */
     readonly currentPage?: CurrentPageType | undefined | null;
     /**
@@ -42,11 +57,11 @@ type Params<TItem> = {
     readonly itemsList?: TItem[] | undefined | null;
 }
 
+
 export type InitStoreDisplayedData<TItem> = Params<TItem>;
-
 type CallbackForceUpdate<TItem> = () => TItem[];
-//#region 
 
+//#region validation
 /**
  * Проверить корректность значения текущей страницы
  * @param currentPage - Текущая страница
@@ -236,6 +251,18 @@ function getEmptyPagination<TItem>(): Pagination<TItem> {
 }
 
 /**
+ * Получить пустую внутреннюю пагинацию
+ * @returns 
+ */
+function getEmptyInternalPagination<TItem> ():InternalPagination<TItem> {
+    return {
+        allItemsList: [],
+        currentPage: 0,
+        numberItemsPerPage: 0
+    }
+}
+
+/**
  * Привести текущую страницу к числу
  * @param currentPage - Текущая страница
  * @param maxPages  - Максимальное количество страниц
@@ -246,15 +273,13 @@ function convertCurrentPageToNumber(currentPage: CurrentPageType, maxPages: numb
         return 0;
     }
     let resultCurrentPage: number = 0;
-    
-    if(typeof currentPage === 'number') {
+
+    if (typeof currentPage === 'number') {
         resultCurrentPage = currentPage;
-    } else if(typeof currentPage === 'string') {
-        if(currentPage === 'firstPage') {
-            resultCurrentPage = 1;
-        } else if(currentPage === 'lastPage') {
-            resultCurrentPage = maxPages;
-        }
+    } else if (currentPage === 'firstPage') {
+        resultCurrentPage = 1;
+    } else if (currentPage === 'lastPage') {
+        resultCurrentPage = maxPages;
     }
 
     if (resultCurrentPage > maxPages) {
@@ -271,14 +296,12 @@ function convertCurrentPageToNumber(currentPage: CurrentPageType, maxPages: numb
  * @returns 
  */
 function convertNumberItemsPerPageToNumber(numberItemsPerPage: NumberItemsPerPage, totalItems: number) {
-    if(typeof numberItemsPerPage === 'number') {
+    if (typeof numberItemsPerPage === 'number') {
         return numberItemsPerPage;
     }
 
-    if(typeof numberItemsPerPage === 'string') {
-        if(numberItemsPerPage === 'all') {
-            return totalItems;
-        }
+    if (numberItemsPerPage === 'all') {
+        return totalItems;
     }
 
     return 0;
@@ -286,7 +309,7 @@ function convertNumberItemsPerPageToNumber(numberItemsPerPage: NumberItemsPerPag
 
 /**
  * Получить пагинацию
- * @param currentPage - Текущая страница, ВАЖНО! отсчет идет с 1
+ * @param currentPage - Текущая страница, отсчет идет с 1
  * @param numberItemsPerPage - Количество элементов на одной странице
  * @param itemsList - Список всех элементов
  * @returns 
@@ -368,10 +391,11 @@ function getPagination<TItem>(currentPage: CurrentPageType | undefined | null, n
         itemsOnCurrentPage: itemsOnCurrentPage
     }
 }
+
 //#endregion
 
 export default class StoreDisplayedData<TItem> {
-    private _allItemsList: TItem[];
+    private _internalPagination: InternalPagination<TItem>;
     private _pagination_observable: Pagination<TItem>;
     private _callbackForceUpdate?: CallbackForceUpdate<TItem>;
 
@@ -380,7 +404,6 @@ export default class StoreDisplayedData<TItem> {
     }
 
     private _dataStatus_observable: DataStatus;
-
 
     /**
      * Установить список элементов без триггеров
@@ -392,7 +415,10 @@ export default class StoreDisplayedData<TItem> {
             return;
         }
 
-        this._allItemsList = itemsList;
+        // Запоминаем новый список элементов
+        this._changeInternalPagination({
+            itemsList: itemsList
+        });
     }
 
     /**
@@ -416,7 +442,9 @@ export default class StoreDisplayedData<TItem> {
         }
 
         // Запоминаем новый список элементов
-        this._allItemsList = newItemsList;
+        this._changeInternalPagination({
+            itemsList: newItemsList
+        });
     }
 
     /**
@@ -444,7 +472,7 @@ export default class StoreDisplayedData<TItem> {
      * Store будет возвращен в первоначальное состояние
      */
     public destroy() {
-        this._allItemsList = [];
+        this._internalPagination = getEmptyInternalPagination<TItem>();
         this._pagination_observable = getEmptyPagination<TItem>();
         this._callbackForceUpdate = undefined;
         this._dataStatus_observable = 'notSet';
@@ -466,20 +494,21 @@ export default class StoreDisplayedData<TItem> {
             return;
         }
 
-        const currentPage: CurrentPageType =  validCurrentPage === undefined ? this._pagination_observable.currentPage : validCurrentPage;
-        const numberItemsPerPage: NumberItemsPerPage =  validNumberItemsPerPage === undefined ? this.pagination.numberItemsPerPage: validNumberItemsPerPage;
-
-        if (validItemsList !== undefined) {
-            // Запоминаем новый массив данных
-            this._allItemsList = validItemsList;
-            // Меняем статус данных
-            this._dataStatus_observable = this._allItemsList.length ? 'installed' : 'empty';
-        }
-
         // Пытаемся применить функцию принудительного обновления
         this._applyCallbackForceUpdate();
+        // Устанавливаем новые данные
+        this._changeInternalPagination({
+            itemsList: validItemsList,
+            currentPage: validCurrentPage,
+            numberItemsPerPage: validNumberItemsPerPage
+        });
+        // Проверяем изменился список элементов или нет
+        if (validItemsList !== undefined) {
+            // Меняем статус данных
+            this._dataStatus_observable = this._internalPagination.allItemsList.length ? 'installed' : 'empty';
+        }
         // Создаем новую пагинацию
-        this._pagination_observable = getPagination(currentPage, numberItemsPerPage, this._allItemsList);
+        this._pagination_observable = this._getPagination();
     }
 
     /**
@@ -496,19 +525,61 @@ export default class StoreDisplayedData<TItem> {
         return this._pagination_observable;
     }
 
+    private _getPagination(): Pagination<TItem> {
+        return getPagination<TItem>(this._internalPagination.currentPage, this._internalPagination.numberItemsPerPage, this._internalPagination.allItemsList);
+    }
+
+    private _changeInternalPagination(params?: Params<TItem>) {
+        const validCurrentPageValue = validationCurrentPageValue(params?.currentPage) ;
+        const validAllItemsListValue = validationItemsListValue<TItem>(params?.itemsList);
+        const validNumberItemsPerPageValue = validationNumberItemsPerPageValue(params?.numberItemsPerPage) ;
+
+        if (validCurrentPageValue === undefined && validAllItemsListValue === undefined && validNumberItemsPerPageValue === undefined) {
+            // Ничего не передано, выходим
+            return;
+        }
+
+        let allItemsList: InternalPagination<TItem>['allItemsList'] = this._internalPagination.allItemsList;
+        let currentPage: InternalPagination<TItem>['currentPage'] = this._internalPagination.currentPage;
+        let numberItemsPerPage: InternalPagination<TItem>['numberItemsPerPage'] = this._internalPagination.numberItemsPerPage;
+
+        if(validAllItemsListValue) {
+            allItemsList = validAllItemsListValue;
+        }
+
+        if(validNumberItemsPerPageValue) {
+            numberItemsPerPage = validNumberItemsPerPageValue;
+        }
+
+        if(validCurrentPageValue) {
+            if (typeof validCurrentPageValue === 'number') {
+                currentPage = validCurrentPageValue;
+            } else if(validCurrentPageValue === 'firstPage' || validCurrentPageValue === 'lastPage') {
+                const totalItems: number = allItemsList.length;
+                const maxPages: number = countMaxPages(numberItemsPerPage, totalItems);
+                currentPage = convertCurrentPageToNumber(validCurrentPageValue, maxPages);
+            }
+        }
+
+        this._internalPagination = {
+            allItemsList: allItemsList,
+            currentPage: currentPage,
+            numberItemsPerPage: numberItemsPerPage
+        };
+    }
+
     /**
      * Показать следующую страницу
      */
     public eventShowNextPage() {
         this._applyCallbackForceUpdate();
 
-        if (!this._allItemsList.length) {
+        if (!this._internalPagination.allItemsList.length) {
             return;
         }
 
         const maxPages: number = this._pagination_observable.maxPages;
         const currentPage: number = this._pagination_observable.currentPage;
-        const numberItemsPerPage: NumberItemsPerPage = this._pagination_observable.numberItemsPerPage;
         const nextPage: CurrentPageType = validationCurrentPage(currentPage + 1, maxPages);
         
         if (!nextPage) {
@@ -519,7 +590,11 @@ export default class StoreDisplayedData<TItem> {
             return;
         }
 
-        const newPagination = getPagination(nextPage, numberItemsPerPage, this._allItemsList);
+        this._changeInternalPagination({
+            currentPage: nextPage
+        });
+
+        const newPagination = this._getPagination();
         this._setPagination_action(newPagination);
     }
 
@@ -529,13 +604,12 @@ export default class StoreDisplayedData<TItem> {
     public eventShowPrevPage() {
         this._applyCallbackForceUpdate();
 
-        if (!this._allItemsList.length) {
+        if (!this._internalPagination.allItemsList.length) {
             return;
         }
 
         const maxPages: number = this._pagination_observable.maxPages;
         const currentPage: number = this._pagination_observable.currentPage;
-        const numberItemsPerPage: NumberItemsPerPage = this._pagination_observable.numberItemsPerPage;
         const prevPage = validationCurrentPage(currentPage - 1, maxPages);
 
         if (!prevPage) {
@@ -546,28 +620,58 @@ export default class StoreDisplayedData<TItem> {
             return;
         }
 
-        const newPagination = getPagination(prevPage, numberItemsPerPage, this._allItemsList);
+        this._changeInternalPagination({
+            currentPage: prevPage
+        });
+
+        const newPagination = this._getPagination();
         this._setPagination_action(newPagination);
     }
 
-    constructor(initData?: InitStoreDisplayedData<TItem>) {
+    constructor(init?: InitStoreDisplayedData<TItem>) {
         this.eventShowPrevPage = this.eventShowPrevPage.bind(this);
         this.eventShowNextPage = this.eventShowNextPage.bind(this);
         let dataStatus: DataStatus = 'notSet';
+        let allItemsList: InternalPagination<TItem>['allItemsList'] = [];
+        let currentPage: InternalPagination<TItem>['currentPage'] = 0;
+        let numberItemsPerPage: InternalPagination<TItem>['numberItemsPerPage'] = 0;
 
-        let allItemsList: TItem[] = [];
+        if (init) {
 
-        if (initData) {
-            if(Array.isArray(initData.itemsList)) {
-                if(initData.itemsList.length) {
-                    allItemsList = initData.itemsList;
+            const validCurrentPageValue = validationCurrentPageValue(init?.currentPage);
+            const validNumberItemsPerPageValue = validationNumberItemsPerPageValue(init?.numberItemsPerPage);
+
+            if(Array.isArray(init.itemsList)) {
+                if(init.itemsList.length) {
+                    allItemsList = init.itemsList;
                     dataStatus = 'installed'; 
                 }
             }
-        }
 
-        this._pagination_observable = getPagination(initData?.currentPage, initData?.numberItemsPerPage, initData?.itemsList);
-        this._allItemsList = allItemsList;
+            if(validNumberItemsPerPageValue) {
+                numberItemsPerPage = validNumberItemsPerPageValue;
+            }
+
+
+            if(typeof validCurrentPageValue === 'number'){
+                currentPage = validCurrentPageValue;
+            }else if(validCurrentPageValue === 'firstPage' || validCurrentPageValue === 'lastPage') {
+                const totalItems: number = allItemsList.length;
+                const maxPages: number = countMaxPages(numberItemsPerPage, totalItems);
+                currentPage = convertCurrentPageToNumber(validCurrentPageValue, maxPages);
+            }
+
+
+
+
+        }
+        this._internalPagination = {
+            allItemsList: allItemsList,
+            currentPage: currentPage,
+            numberItemsPerPage: numberItemsPerPage ? numberItemsPerPage: 0
+        };
+
+        this._pagination_observable = getPagination(init?.currentPage, init?.numberItemsPerPage, allItemsList);
         this._dataStatus_observable = dataStatus;
         this._callbackForceUpdate = undefined;
 
