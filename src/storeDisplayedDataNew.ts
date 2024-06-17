@@ -160,8 +160,17 @@ function validationCurrentPage(currentPage: CurrentPageType | undefined | null, 
     
     if(typeof validCurrentPageValue === 'number') {
         const validMaxPages: number = validationNumber(maxPages, 0);
+
+        if(validMaxPages <= 0) {
+            return 0;
+        }
+
         if (validCurrentPageValue > validMaxPages) {
             return validMaxPages;
+        }
+
+        if(validCurrentPageValue <= 0) {
+            return 1;
         }
     }
 
@@ -269,7 +278,7 @@ function getEmptyInternalPagination<TItem> ():InternalPagination<TItem> {
  * @returns 
  */
 function convertCurrentPageToNumber(currentPage: CurrentPageType, maxPages: number): number {
-    if (!maxPages) {
+    if (maxPages <= 0) {
         return 0;
     }
     let resultCurrentPage: number = 0;
@@ -284,6 +293,10 @@ function convertCurrentPageToNumber(currentPage: CurrentPageType, maxPages: numb
 
     if (resultCurrentPage > maxPages) {
         return maxPages;
+    }
+
+    if (resultCurrentPage <= 0) {
+        return 1;
     }
 
     return resultCurrentPage;
@@ -551,12 +564,24 @@ export default class StoreDisplayedData<TItem> {
             numberItemsPerPage = validNumberItemsPerPageValue;
         }
 
+        const totalItems: number = allItemsList.length;
+        const maxPages: number = countMaxPages(numberItemsPerPage, totalItems);
+        debugger;
+
+        if(validAllItemsListValue || validNumberItemsPerPageValue) {
+            if (validNumberItemsPerPageValue === 'all') {
+                // Сбрасываем текущую страницу на 1
+                currentPage = convertCurrentPageToNumber(1, maxPages);
+            } else {
+                // Проверяем можно ли оставить текущую страницу
+                currentPage = convertCurrentPageToNumber(currentPage, maxPages);
+            }
+        }
+
         if(validCurrentPageValue) {
             if (typeof validCurrentPageValue === 'number') {
                 currentPage = validCurrentPageValue;
             } else if(validCurrentPageValue === 'firstPage' || validCurrentPageValue === 'lastPage') {
-                const totalItems: number = allItemsList.length;
-                const maxPages: number = countMaxPages(numberItemsPerPage, totalItems);
                 currentPage = convertCurrentPageToNumber(validCurrentPageValue, maxPages);
             }
         }
@@ -637,7 +662,6 @@ export default class StoreDisplayedData<TItem> {
         let numberItemsPerPage: InternalPagination<TItem>['numberItemsPerPage'] = 0;
 
         if (init) {
-
             const validCurrentPageValue = validationCurrentPageValue(init?.currentPage);
             const validNumberItemsPerPageValue = validationNumberItemsPerPageValue(init?.numberItemsPerPage);
 
@@ -652,7 +676,6 @@ export default class StoreDisplayedData<TItem> {
                 numberItemsPerPage = validNumberItemsPerPageValue;
             }
 
-
             if(typeof validCurrentPageValue === 'number'){
                 currentPage = validCurrentPageValue;
             }else if(validCurrentPageValue === 'firstPage' || validCurrentPageValue === 'lastPage') {
@@ -660,10 +683,6 @@ export default class StoreDisplayedData<TItem> {
                 const maxPages: number = countMaxPages(numberItemsPerPage, totalItems);
                 currentPage = convertCurrentPageToNumber(validCurrentPageValue, maxPages);
             }
-
-
-
-
         }
         this._internalPagination = {
             allItemsList: allItemsList,
