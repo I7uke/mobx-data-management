@@ -15,3 +15,4 @@ export { default as StoreDisplayedData, type InitStoreDisplayedData } from "./st
 export { default as StorePopupWindows } from "./storePopupWindows";
 export { default as StoreSitePageTitle } from "./storeSitePageTitle";
 export { default as AbstractStoreEditItem, type InitAbstractStoreEditItem, type ResultOfItemEditing } from "./abstractStoreEditItem";
+export { default as StoreValue } from "./storeValue";

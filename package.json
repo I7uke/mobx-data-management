@@ -14,6 +14,7 @@
     "test-baseStorePage": "jest baseStorePage.test.ts --coverage",
     "test-storePopupWindows": "jest storePopupWindows.test.ts --coverage",
     "test-abstractStoreDefaultPageContent.test": "jest abstractStoreDefaultPageContent.test --coverage",
+    "test-storeValue.test": "jest storeValue.test --coverage",
     "build-prod": "rollup --config"
   },
   "main": "./dist",
